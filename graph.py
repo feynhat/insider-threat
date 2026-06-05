@@ -77,3 +77,5 @@ if __name__ == "__main__":
 	for i, comp in enumerate(comps[:5], start=1):
 		print(f"Component {i}: size={len(comp)}")
 
+#This is a test change.
+
