@@ -219,7 +219,7 @@ def plot_feature_distributions(G, tp_comps, fp_comps, events_by_id):
 
 # --- Standalone entry point ---
 if __name__ == "__main__":
-    from graph_builder import load_bipartite_graph_from_json, connected_components_sorted
+    from graph import load_bipartite_graph_from_json, connected_components_sorted
 
     file = sys.argv[1] if len(sys.argv) > 1 else "security_data.json"
     G, event_ids, entity_ids = load_bipartite_graph_from_json(file)
