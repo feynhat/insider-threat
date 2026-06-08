@@ -8,7 +8,8 @@ import random
 import sys
 from datetime import datetime, timedelta
 
-random.seed(123)
+# Usage: python generate_synthetic.py [output_file] [seed]
+# Omit seed for a different dataset each time
 
 EVENT_TYPES = ["Authentication", "Privilege Operation", "Defense Evasion",
                "Data Access", "Exfiltration"]
@@ -294,6 +295,8 @@ def generate_dataset():
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "synthetic_data.json"
+    seed = int(sys.argv[2]) if len(sys.argv) > 2 else None
+    random.seed(seed)
     data = generate_dataset()
     with open(out, "w") as f:
         json.dump(data, f, indent=2)
