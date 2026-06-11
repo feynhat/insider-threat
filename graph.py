@@ -74,8 +74,10 @@ if __name__ == "__main__":
 	comps = connected_components_sorted(G)
 	print(f"Connected components: {len(comps)}")
 	# print sizes of the 5 largest components
-	for i, comp in enumerate(comps[:5], start=1):
+	for i, comp in enumerate(comps[-18:-1], start=1):
 		print(f"Component {i}: size={len(comp)}")
-
-#This is a test change.
+		#I want to print the kind of nodes in the component (event or entity) and the number of each kind
+		event_count = sum(1 for n in comp if G.nodes[n].get("kind") == "event")
+		entity_count = sum(1 for n in comp if G.nodes[n].get("kind") == "entity")
+		print(f"  Events: {event_count}, Entities: {entity_count}")
 

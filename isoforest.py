@@ -5,11 +5,12 @@ Uses hand-crafted features. Works with graph.py.
 Usage:
     python isoforest.py security_data.json
 """
-
+import networkx as nx
 import json
 import sys
 from collections import Counter
 from datetime import datetime
+
 
 import numpy as np
 from sklearn.ensemble import IsolationForest
@@ -33,16 +34,42 @@ def load_and_score(file):
 
     # Build graph and find components
     G, event_ids, entity_ids = load_bipartite_graph_from_json(file)
+    isolated_nodes = list(nx.isolates(G))
+    G.remove_nodes_from(isolated_nodes)
     comps = connected_components_sorted(G)
+
+    print(f"Total components: {len(comps)}, Isolated nodes removed: {len(isolated_nodes)}")
 
     # Load metadata
     with open(file, "r", encoding="utf-8") as f:
         data = json.load(f)
     events_by_id = {e["id"]: e for e in data["events"]}
     entities_by_id = {e["id"]: e for e in data["entities"]}
-    gt = data.get("ground_truth", {})
-    tp_event_ids = set(gt.get("true_positive_events", []))
-    fp_tp_ratio = gt.get("fp_tp_ratio", data.get("metadata", {}).get("fp_tp_ratio", 20))
+    
+    have_gt = "ground_truth" in data
+
+    if have_gt:
+        gt = data.get("ground_truth", {})
+        true_attack_scenarios = gt.get("attack_scenarios", [])
+        scenario_ids = {}
+    
+        for scenario in true_attack_scenarios:
+            sid = scenario["id"]
+            eids = set(scenario.get("event_ids", [])).difference(set(isolated_nodes))
+            enids = set(scenario.get("entity_ids", [])).difference(set(isolated_nodes))
+            scenario_ids[sid] = eids.union(enids)
+
+        print(f"True positive scenarios: {len(true_attack_scenarios)}")
+        print(f"Number of true attack scenarios: {len(scenario_ids)}.")
+        for sid, nodes in scenario_ids.items():
+            print(f"  Scenario {sid}: {len(nodes)} nodes.")
+
+    
+
+        tp_event_ids = set(gt.get("true_positive_events", [])).difference(set(isolated_nodes))
+        tp_entity_ids = set(gt.get("true_positive_entities", [])).difference(set(isolated_nodes))
+    
+    fp_tp_ratio = data.get("metadata", {}).get("fp_tp_ratio", 20)
 
     # Extract features per component
     results = []
@@ -79,7 +106,7 @@ def load_and_score(file):
             "event_ids": ev_ids,
             "entity_ids": en_ids,
             "features": features,
-            "is_tp": bool(ev_ids & tp_event_ids),
+            "is_tp": bool(ev_ids.union(en_ids) in scenario_ids.values()) if have_gt else False,
             "events": evts,
             "event_types": event_types,
         })
@@ -121,10 +148,19 @@ if __name__ == "__main__":
     print(f"Precision: {tp_caught / max(sum(flagged), 1):.0%}")
     print(f"Recall:    {tp_caught / max(n_tp, 1):.0%}")
 
+    #I want to print the flagged components, showing their event ids, entity ids, and features, and whether they are true positives or false positives. I want to sort them by their anomaly score (most anomalous first).
+    flagged_results = [r for r in results if r["flagged"]]
+    flagged_results.sort(key=lambda r: r["anomaly_score"], reverse=True)
+
+
     print(f"\nTOP 10 MOST ANOMALOUS:")
-    for i, r in enumerate(results[:10]):
+    for i, r in enumerate(flagged_results[:10]):
         label = "TP" if r["is_tp"] else "FP"
         f = r["features"]
         print(f"  #{i+1} [{label}] events={f[5]:.0f}, sev={f[1]:.1f}, "
               f"wt={f[0]:.3f}, stages={f[3]:.0f}/5, "
               f"score={r['anomaly_score']:.3f}")
+        print(f"       Event IDs={r['event_ids']}")
+        print(f"       Entity IDs={r['entity_ids']}")
+        
+
