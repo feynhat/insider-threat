@@ -1,0 +1,33 @@
+\section{Methodology (Part 2) and Conclusion}
+\begin{frame}{Introduction}
+\justifying{
+\begin{itemize}
+  \item A hash function $H: \{0, 1\}^* \to \{0, 1\}^l$
+    takes as input an arbitrarily
+  long string $m$ and outputs
+  a string $H(m)$ of fixed length $l$. The has function
+  should have the following properties:
+\begin{itemize}
+\item The computation of $H(m)$ should be \textit{fast} and
+  \textit{easy} (polynomial time, preferably linear).
+\item Inversion of $H$ should be \textit{difficult} (exponential time).
+\item $H(m)$ should be \textit{collision resistant}:
+  it should be \textit{hard} to find a pair of messages
+  $m_1, m_2$ such that $H(m_1) = H(m_2)$.
+\end{itemize}
+\end{itemize}}
+\end{frame}
+\newpage
+\begin{frame}
+  \begin{itemize}
+    \item In practice, most hash functions use some kind of
+      mixing algorithm that transforms string of length
+      $n$ into another string of length $n$.
+    \item The hash function breaks the string into blocks
+      of length $n$.
+    \item $m = m_1 || m_2 || \dots || m_k$.
+    \item Then it combines iteratively combines each block
+      with the previously computed hash value using the
+      mixing algorithm.
+  \end{itemize}
+\end{frame}

@@ -42,10 +42,10 @@ def load_metadata(file):
         data = json.load(f)
     events_by_id = {e["id"]: e for e in data["events"]}
     entities_by_id = {e["id"]: e for e in data["entities"]}
-    gt = data.get("ground_truth", {})
-    tp_event_ids = set(gt.get("true_positive_events", []))
-    return events_by_id, entities_by_id, tp_event_ids, gt
-
+    #gt = data.get("ground_truth", {})
+    #tp_event_ids = set(gt.get("true_positive_events", []))
+    return events_by_id, entities_by_id
+    #tp_event_ids, gt
 
 def classify_components(G, components, tp_event_ids):
     """Split components into TP and FP based on ground truth."""
@@ -224,12 +224,12 @@ if __name__ == "__main__":
     file = sys.argv[1] if len(sys.argv) > 1 else "security_data.json"
     G, event_ids, entity_ids = load_bipartite_graph_from_json(file)
     comps = connected_components_sorted(G)
-    events_by_id, entities_by_id, tp_event_ids, gt = load_metadata(file)
-    tp_comps, fp_comps = classify_components(G, comps, tp_event_ids)
+    events_by_id, entities_by_id = load_metadata(file)
+    #tp_comps, fp_comps = classify_components(G, comps, tp_event_ids)
 
     print(f"Components: {len(comps)} total ({len(tp_comps)} TP, {len(fp_comps)} FP)")
 
     plot_tp_vs_fp(G, tp_comps, fp_comps, events_by_id, entities_by_id)
-    plot_kill_chains(G, tp_comps, events_by_id)
+    #plot_kill_chains(G, tp_comps, events_by_id)
     plot_feature_distributions(G, tp_comps, fp_comps, events_by_id)
     plt.show()

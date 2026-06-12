@@ -1,0 +1,103 @@
+\documentclass[t]{beamer}
+
+% For more themes, color themes and font themes, see:
+% http://deic.uab.es/~iblanes/beamer_gallery/index_by_theme.html
+%\usetheme{iclpt}
+\usepackage{ragged2e}
+\usepackage{etoolbox}
+\apptocmd{\frame}{}{\justifying}{}
+
+\apptocmd{\column}{}{\justifying}{}
+\hyphenpenalty=1000
+\exhyphenpenalty=1000
+
+%
+\mode<presentation>
+{
+  \usetheme{Madrid}       % Madrid or try default, Darmstadt, Warsaw, ...
+  \usecolortheme{spruce} % default or try albatross, beaver, crane, beetle, dove, fly, monarca, seagull, spruce, and wolverine ...
+  \usefonttheme{serif}    % serif or try default, structurebold, ...
+  %\setbeamertemplate{navigation symbols}{}
+  \setbeamertemplate{caption}[numbered]
+}
+
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{chemfig}
+\usepackage[version=3]{mhchem}
+
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{pifont}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{xspace,colortbl}
+%\usepackage[screen,panelleft,code,blue,sectionbreak]{pdfscreen}
+\usepackage[round]{natbib}
+\usepackage{hyperref}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+% On Overleaf, these lines give you sharper preview images.
+% You might want to `comment them out before you export, though.
+\usepackage{pgfpages}
+\pgfpagesuselayout{resize to}[%
+  physical paper width=8in, physical paper height=6in]
+
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+%\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+%\theoremstyle{remark}
+\newtheorem{rem}[thm]{Remark}
+\numberwithin{equation}{section}
+% MATH -----------------------------------------------------------
+\newcommand{\norm}[1]{\left\Vert#1\right\Vert}
+\newcommand{\abs}[1]{\left\vert#1\right\vert}
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\Real}{\mathbb R}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\To}{\longrightarrow}
+\newcommand{\BX}{\mathbf{B}(X)}
+\newcommand{\A}{\mathcal{A}}
+%\usetheme{iclpt}
+\usepackage{url}
+\usepackage{amsmath}
+
+%\pgfdeclareimage[height=0.5cm]{university-logo}{eiwr.png}
+% \logo{\pgfuseimage{eiwr.png}}
+% Here's where the presentation starts, with the info for the title slide
+
+\begin{block}{}
+\begin{flushleft}
+\begin{figure}
+\includegraphics[scale=0.35]{images/Fields.pdf}
+\end{figure}
+\end{flushleft}
+\end{block}
+
+\title[Insider Threat]{Insider Threat}
+\author[MK, FK, KSS]{Aaron Tronsgard, Kumar Sannidhya Shukla, Brinda Venkataramani}
+
+\date{\today}
+\vfill
+\begin{document}
+\titlepage
+
+% These three lines create an automatically generated table of contents.
+\newpage
+\begin{frame}{}
+\vspace{-6mm}
+\small{
+ ~~~~~~~~~~~ \tableofcontents
+ } \tiny
+\end{frame}
+
+\include{s01-business}
+
+\include{s02-method1}
+
+\include{s03-method2+conclusion}
+
+\end{document}
