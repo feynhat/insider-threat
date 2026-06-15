@@ -56,10 +56,6 @@
 \end{frame}
 \newpage
 
-%\begin{frame}{The Isolation Forest Algorithm}
-
-%\end{frame}
-
 \begin{frame}{Scoring Anomalies}
 \begin{itemize}
     \item For each point $x$, compute average path length $h(x)$ over trees
@@ -75,16 +71,62 @@
 
 % Slide 5
 \begin{frame}{Algorithm Summary}
-\begin{enumerate}
+\begin{itemize}
     \item Sample subset of data
     \item Build many isolation trees
     \item Compute path lengths for each point
     \item Aggregate to obtain anomaly score
     \item Flag points with high scores as anomalies
-\end{enumerate}
-
+\end{itemize}
 \vspace{0.3cm}
 \textbf{Key advantage:} No distance or density estimation required
+\end{frame}
+\newpage
+
+\begin{frame}{The Isolation Forest Algorithm}
+
+  \begin{algorithm}[H]
+\caption{iTree($X'$)}\label{alg:cap}
+\begin{algorithmic}[1]
+  \Require $X'$, Input data
+  \Ensure A tree
+  \If{$X'$ cannot be divided}
+  \State \Return \texttt{exNode}($X'$)
+  \EndIf
+  \State $Q \gets \text{ list of attributes in } X'$
+\State randomly select an attribute $q \in Q$
+\State randomly select a split point $p$ between the \texttt{max} and \texttt{min} values of
+the attribute $q$ in $X'$
+\State $X_l \gets $ \texttt{filter}$(X, q \le p)$
+\State $X_r \gets $ \texttt{filter}$(X, q > p)$
+\State \Return \texttt{inNode(iTree(}$X_l$\texttt{), iTree(}$X_r$\texttt{))}
+\end{algorithmic}
+\end{algorithm}
+
+\end{frame}
+\newpage
+
+\begin{frame}{The Isolation Forest Algorithm}
+
+  \begin{algorithm}[H]
+\caption{iForest($X$, $t$, $\psi$)}\label{alg2:cap}
+\begin{algorithmic}[1]
+  \Require $X$ data, $t$ number of trees, $\psi$ subsampling size
+  \Ensure A set of \texttt{iTree}'s
+  \State Initialize \texttt{Forest}
+  \For{$i = 1$ to t}
+  \State $X' \gets $ \texttt{sample}($X, \psi$)
+  \State \texttt{Forest} $\gets$ \texttt{Forest} $\cup$ \texttt{iTree}($X'$)
+  \EndFor
+  \State \Return \texttt{Forest}
+\end{algorithmic}
+\end{algorithm}
+\pause
+\begin{itemize}
+  \item Time complexity: $\mathcal{O}(t\psi^2)$
+  \item Space complexity: $\mathcal{O}(t\psi)$
+\end{itemize}
+
 \end{frame}
 \newpage
 
@@ -280,17 +322,3 @@
   \end{itemize}}
 \end{frame}
 \newpage
-
-\begin{frame}
-  \begin{itemize}
-    \item In practice, most hash functions use some kind of
-      mixing algorithm that transforms string of length
-      $n$ into another string of length $n$.
-    \item The hash function breaks the string into blocks
-      of length $n$.
-    \item $m = m_1 || m_2 || \dots || m_k$.
-    \item Then it combines iteratively combines each block
-      with the previously computed hash value using the
-      mixing algorithm.
-  \end{itemize}
-\end{frame}

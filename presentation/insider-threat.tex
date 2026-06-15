@@ -39,6 +39,8 @@
 \usepackage[round]{natbib}
 \usepackage{hyperref}
 \usepackage{lmodern}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usetikzlibrary{positioning}
 \usepackage[T1]{fontenc}
 % On Overleaf, these lines give you sharper preview images.
@@ -69,17 +71,12 @@
 \usepackage{url}
 \usepackage{amsmath}
 
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
 %\pgfdeclareimage[height=0.5cm]{university-logo}{eiwr.png}
 % \logo{\pgfuseimage{eiwr.png}}
 % Here's where the presentation starts, with the info for the title slide
-
-\begin{block}{}
-\begin{flushleft}
-\begin{figure}
-%\includegraphics[scale=0.35]{images/Fields.pdf}
-\end{figure}
-\end{flushleft}
-\end{block}
 
 \title[Insider Threat]{Insider Threat}
 \author[MK, FK, KSS]{Aaron Tronsgard, Kumar Sannidhya Shukla, Brinda Venkataramani}
@@ -87,6 +84,15 @@
 \date{\today}
 \vfill
 \begin{document}
+
+\begin{block}{}
+\begin{flushleft}
+\begin{figure}
+\includegraphics[scale=0.35]{images/Fields.pdf}
+\end{figure}
+\end{flushleft}
+\end{block}
+
 \titlepage
 
 % These three lines create an automatically generated table of contents.
