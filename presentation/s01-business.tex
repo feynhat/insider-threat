@@ -1,33 +1,83 @@
 \section{Introduction}
-\begin{frame}{Business needs}
+\begin{frame}{Introduction}
+
+
 \justifying{
 \begin{itemize}
-  \item A hash function $H: \{0, 1\}^* \to \{0, 1\}^l$
-    takes as input an arbitrarily
-  long string $m$ and outputs
-  a string $H(m)$ of fixed length $l$. The has function
-  should have the following properties:
+  \item We were approached by a large tech company for help with their threat alert system. 
 \begin{itemize}
-\item The computation of $H(m)$ should be \textit{fast} and
-  \textit{easy} (polynomial time, preferably linear).
-\item Inversion of $H$ should be \textit{difficult} (exponential time).
-\item $H(m)$ should be \textit{collision resistant}:
-  it should be \textit{hard} to find a pair of messages
-  $m_1, m_2$ such that $H(m_1) = H(m_2)$.
+\item They have a mature insider threat stack.
+\item Includes multiple models, IDS, and threat hunting methods.
 \end{itemize}
+\pause
+\item They receive too many alerts for their security analysts to go through manually, resulting in alert fatigue.
 \end{itemize}}
+
+\begin{center}
+\includegraphics[scale=0.25]{analyst.jpg}
+\end{center}
 \end{frame}
-\newpage
-\begin{frame}
+
+
+\begin{frame}{The data}
   \begin{itemize}
-    \item In practice, most hash functions use some kind of
-      mixing algorithm that transforms string of length
-      $n$ into another string of length $n$.
-    \item The hash function breaks the string into blocks
-      of length $n$.
-    \item $m = m_1 || m_2 || \dots || m_k$.
-    \item Then it combines iteratively combines each block
-      with the previously computed hash value using the
-      mixing algorithm.
+    \item What does the data look like? 
+    
+    \pause 
+    
+    \item The company's system flags suspicious events and records data about the event and the entities involved.
   \end{itemize}
+  
+  \pause
+  
+  \begin{center}
+  	Sample Event:
+  	\includegraphics[scale=0.4]{event.png}
+  \end{center}
+  
+  \pause
+  
+  \begin{center}
+  	Sample Entity: \\
+  	\includegraphics[scale=0.4]{entity.png}
+  \end{center}
+  
+  \pause
+  
+  \begin{center}
+  	Sample Relationship: \\
+  	\includegraphics[scale=0.4]{relationship.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Business Needs}
+	\begin{itemize}
+		\item The data consists of hundreds of events, entities, and relationships between them.
+		
+		\item This is too much for the analyst to go through every week.
+		
+		\pause
+		
+		\item Our goal is to clump events together into potential attack scenarios and provide the analyst with a (much smaller) list of events to look into manually.
+	\end{itemize}
+	
+	\pause
+	
+	\begin{center}
+	\includegraphics[scale=0.1]{analyst_happy.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Outcomes}
+	\begin{itemize}[itemsep = 12 pt, topsep=48 pt]
+		\item Success will be measured by our ability to make the analyst's job easier.
+		
+		\pause
+		
+		\item Saving the company money and resources, mostly in human-hours, and allowing the analyst to spend more time on other projects.
+		
+		\pause
+		
+		\item While also hopefully being able to more reliably alert the company to malicious attack scenarios.
+	\end{itemize}
 \end{frame}
