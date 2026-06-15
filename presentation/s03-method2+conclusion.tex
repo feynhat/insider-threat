@@ -1,33 +1,248 @@
 \section{Methodology (Part 2) and Conclusion}
-\begin{frame}{Introduction}
+
+\begin{frame}{Scoring and triage tiers}
 \justifying{
 \begin{itemize}
-  \item A hash function $H: \{0, 1\}^* \to \{0, 1\}^l$
-    takes as input an arbitrarily
-  long string $m$ and outputs
-  a string $H(m)$ of fixed length $l$. The has function
-  should have the following properties:
-\begin{itemize}
-\item The computation of $H(m)$ should be \textit{fast} and
-  \textit{easy} (polynomial time, preferably linear).
-\item Inversion of $H$ should be \textit{difficult} (exponential time).
-\item $H(m)$ should be \textit{collision resistant}:
-  it should be \textit{hard} to find a pair of messages
-  $m_1, m_2$ such that $H(m_1) = H(m_2)$.
-\end{itemize}
+  \item Each subgraph is reduced to a fixed feature vector: mean edge
+    weight, mean and maximum severity, kill-chain stage coverage, a
+    \textit{temporal-order} score, span, and size.
+  \item The temporal-order score is the fraction of consecutive
+    (time-sorted) events whose MITRE ATT\&CK stage is non-decreasing.
+    A genuine attack progresses in order --- Initial Access $\to$
+    Privilege Escalation $\to$ Defense Evasion $\to$ Collection $\to$
+    Exfiltration --- so it scores $1.0$, whereas uncorrelated noise does not.
+  \item An \textbf{Isolation Forest} scores every subgraph without using any
+    labels. Its contamination parameter is set from the dataset's
+    FP:TP ratio metadata, so the method ports directly to new input files.
+  \item Subgraphs are then split into three tiers:
+  \begin{itemize}
+    \item \textbf{Critical} --- flagged by the model; the analyst must review.
+    \item \textbf{Elevated} --- the next $5\%$ by score; review as capacity allows.
+    \item \textbf{Low} --- logged, surfaced only on demand.
+  \end{itemize}
 \end{itemize}}
 \end{frame}
 \newpage
-\begin{frame}
-  \begin{itemize}
-    \item In practice, most hash functions use some kind of
-      mixing algorithm that transforms string of length
-      $n$ into another string of length $n$.
-    \item The hash function breaks the string into blocks
-      of length $n$.
-    \item $m = m_1 || m_2 || \dots || m_k$.
-    \item Then it combines iteratively combines each block
-      with the previously computed hash value using the
-      mixing algorithm.
-  \end{itemize}
+
+\begin{frame}{Key performance indicators}
+\justifying{
+\begin{itemize}
+  \item On the provided dataset, the pipeline ingests \textbf{1{,}012} raw
+    alerts and decomposes them into \textbf{185} candidate subgraphs.
+  \item Only \textbf{8} subgraphs (\textbf{43} events) reach the Critical
+    tier --- a \textbf{95.8\%} reduction in the events an analyst must
+    triage.
+  \item All \textbf{6} ground-truth attack scenarios land in the Critical
+    tier: \textbf{100\% recall} at \textbf{75\% precision}. The two
+    false positives that accompany them are cheap --- a few minutes of
+    review each --- whereas a missed attack is an incident.
+  \item Widening to Critical $+$ Elevated still cuts the workload by
+    \textbf{90.8\%} while providing a second, lower-priority queue.
+\end{itemize}}
+\end{frame}
+\newpage
+
+\begin{frame}{Performance across datasets}
+\justifying{
+\begin{itemize}
+  \item We ran the identical pipeline on the provided dataset and on two
+    independently generated synthetic datasets (same schema, harder
+    separation) that carry ground-truth labels.
+\end{itemize}
+\vspace{0.4em}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Dataset} & \textbf{Events} & \textbf{Subgraphs}
+  & \textbf{Recall} & \textbf{Precision} \\
+\hline
+Provided        & 1{,}012 & 185 & 100\% (6/6) & 75\% \\
+Synthetic 1     & 998     & 179 & 83\% (5/6)  & 62\% \\
+Synthetic 2     & 997     & 179 & 100\% (6/6) & 75\% \\
+\hline
+\end{tabular}
+\end{center}
+\vspace{0.4em}
+\begin{itemize}
+  \item Recall is measured at the Critical tier. In \textbf{every} dataset,
+    \textbf{all 6} attacks fall within Critical $+$ Elevated --- so no
+    attack is ever pushed off the analyst's queue.
+  \item The single Critical-tier miss (Synthetic 1) is a hard false
+    positive that mimics a full kill chain; it still surfaces one tier down.
+\end{itemize}}
+\end{frame}
+\newpage
+
+\begin{frame}{Validating without labels}
+\justifying{
+\begin{itemize}
+  \item Most datasets ship \textbf{no ground-truth labels} --- as in a real
+    deployment, where the analyst is the one assigning them. We can still
+    sanity-check the output two ways.
+  \item \textbf{Against metadata.} The provided unlabeled set declares
+    \textbf{3} expected attack scenarios in its metadata. With no access to
+    labels, the pipeline flags \textbf{exactly 3} Critical subgraphs ---
+    the correct count falls straight out of the FP:TP-driven threshold.
+  \item \textbf{Against structure.} The flagged subgraphs share an
+    unmistakable profile that noise does not:
+\end{itemize}
+\vspace{0.3em}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lcc}
+\hline
+ & \textbf{Critical} & \textbf{Low} \\
+\hline
+Avg.\ MITRE stages covered & 5.0 / 5 & 2.1 / 5 \\
+Avg.\ edge weight          & 1.00    & 0.59 \\
+Avg.\ severity             & 7.6     & 2.5 \\
+\hline
+\end{tabular}
+\end{center}
+\vspace{0.3em}
+\begin{itemize}
+  \item Every flagged subgraph spans the \textbf{full kill chain} with
+    \textbf{maximal-confidence} edges --- exactly what a true positive
+    should look like.
+\end{itemize}}
+\end{frame}
+\newpage
+
+\begin{frame}{Making it legible: subgraph visualization}
+\justifying{
+\begin{itemize}
+  \item \texttt{visualize\_graphs.py} renders each subgraph as a
+    \textbf{bipartite graph}: event nodes (coloured by MITRE stage) on one
+    side, the users, hosts, files, and domains they touch on the other.
+  \item Edge thickness encodes the relationship \textbf{weight}, so a
+    high-confidence attack subgraph is visibly denser and more strongly
+    connected than a noise cluster --- the analyst sees \textit{why} it
+    scored highly at a glance, with no need to read the raw JSON.
+  \item The same tool plots the kill-chain timeline and the
+    feature distributions, giving a fast, visual second opinion alongside
+    the numeric score for any subgraph the analyst wants to inspect.
+\end{itemize}}
+\end{frame}
+\newpage
+
+\begin{frame}{Ranking, not just flagging}
+\justifying{
+\begin{itemize}
+  \item The tier threshold is a convenience, not a gate. Every subgraph
+    receives a continuous anomaly score, and the system prints the
+    \textbf{top-10 most anomalous} subgraphs regardless of tier.
+  \item This matters because the threshold is deliberately conservative.
+    An analyst scanning the ranked list can always look one or two places
+    \textit{past} the cut-off and investigate anything that stands out to
+    them --- a subgraph does not have to be formally flagged to be reviewed.
+  \item Nothing is ever hidden: ``Low'' simply means low-priority, not
+    discarded. The full ranked list, with the score explanation for each
+    subgraph, remains available.
+  \item In practice the genuine attacks occupy the very top of the ranking
+    (ranks 1--6 on the provided data), so a human reading top-down reaches
+    every real incident before any noise.
+\end{itemize}}
+\end{frame}
+\newpage
+
+\begin{frame}{Manpower and cost saved (per batch)}
+\justifying{
+\begin{itemize}
+  \item Industry estimates put average alert triage at roughly
+    \textbf{7 minutes} per alert and a fully-loaded SOC analyst at about
+    \textbf{\$67/hour} ($\sim$\$48/hr U.S.\ base $\times\,1.4$ for
+    benefits and overhead).\footnotemark
+  \item Manually triaging all \textbf{1{,}012} alerts $\approx$
+    \textbf{118 analyst-hours} $\approx$ \textbf{\$7{,}900} per weekly batch.
+  \item Reviewing only the \textbf{43} Critical-tier events takes
+    \textbf{$\sim$5 hours} ($\sim$\$340) --- a saving of
+    \textbf{$\sim$113 hours} and \textbf{$\sim$\$7{,}600} per week.
+\end{itemize}
+\vspace{0.4em}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lccc}
+\hline
+\textbf{Approach} & \textbf{Alerts} & \textbf{Hours} & \textbf{Loaded cost} \\
+\hline
+Manual (everything)   & 1{,}012 & 118 & \$7{,}900 \\
+Critical only         & 43      & 5   & \$340 \\
+Critical $+$ Elevated & 93      & 11  & \$730 \\
+\hline
+\end{tabular}
+\end{center}
+\footnotetext{Triage time: Prophet Security, \textit{SOC Capacity Modeling}
+(2025). Salary: Glassdoor / Salary.com (2026).}}
+\end{frame}
+\newpage
+
+\begin{frame}{Manpower and cost saved (annualized)}
+\justifying{
+\begin{itemize}
+  \item The provided dataset covers roughly \textbf{one week} of alerts.
+    Extrapolating the same volume across a year ($\times 52$):
+\end{itemize}
+\vspace{0.4em}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lcc}
+\hline
+\textbf{Approach} & \textbf{Analyst-hours/yr} & \textbf{Loaded cost/yr} \\
+\hline
+Manual (everything) & $\sim$6{,}100 & $\sim$\$413{,}000 \\
+Critical only       & $\sim$260     & $\sim$\$18{,}000 \\
+\hline
+\textbf{Saved}      & $\sim$5{,}900 & $\sim$\$395{,}000 \\
+\hline
+\end{tabular}
+\end{center}
+\vspace{0.4em}
+\begin{itemize}
+  \item That is roughly \textbf{3 full-time analysts} freed from manual
+    triage --- redeployable to deeper investigation and threat hunting ---
+    while \textbf{every known attack is still caught}.
+  \item Figures are a first-order extrapolation from one week and assume a
+    constant alert rate; they are intended to convey scale, not a budgeted
+    forecast.
+\end{itemize}}
+\end{frame}
+\newpage
+
+\begin{frame}{Future work: analyst feedback and retraining}
+\justifying{
+\begin{itemize}
+  \item The current model is fully \textbf{unsupervised} --- it needs no
+    labels, which is what lets it run on any new input file on day one.
+  \item A natural extension is a \textbf{feedback loop}. Each subgraph in the
+    ranked output could expose a one-click tag --- \texttt{TRUE\_POSITIVE},
+    \texttt{FALSE\_POSITIVE}, or \texttt{NEEDS\_INVESTIGATION} --- written to
+    a standardized log alongside the subgraph's feature vector.
+  \item Because we already compute a feature vector per subgraph, every tag
+    becomes a labelled training example essentially for free. Once enough
+    accumulate, they support a \textbf{supervised} layer (e.g.\ logistic
+    regression or a random forest) that complements the anomaly score and
+    learns this organisation's specific notion of a true threat.
+  \item Tags would also let the threshold \textbf{self-calibrate}: repeated
+    confirmations just below the cut-off can nudge the contamination
+    estimate automatically. This was scoped but left as future work.
+\end{itemize}}
+\end{frame}
+\newpage
+
+\begin{frame}{Conclusion}
+\justifying{
+\begin{itemize}
+  \item We turn a flat stream of \textbf{1{,}012} alerts into a ranked,
+    tiered queue, cutting the analyst's triage load by roughly \textbf{96\%}
+    --- on the order of \textbf{\$0.4M} and \textbf{3 analyst-FTEs} per year
+    --- while catching \textbf{every} known attack on the provided data.
+  \item MITRE ATT\&CK kill-chain \textbf{temporal logic} is the key signal:
+    it distinguishes coordinated attacks from coincidental clusters of
+    high-severity noise, and it is what carries performance over to harder,
+    unseen data.
+  \item The system is unsupervised at its core and ranking-based at the
+    surface: nothing is hidden, the full ordered list is always available,
+    and analyst feedback offers a clear path to a self-improving model.
+\end{itemize}}
 \end{frame}
